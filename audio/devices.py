@@ -13,6 +13,15 @@ def default_devices() -> tuple[int, int]:
     return sd.default.device
 
 
+def device_choices(kind: str) -> list[tuple[str, int]]:
+    """Return [(display_name, index), ...] for devices usable as `kind` ('input' or 'output')."""
+    return [
+        (f"{i}: {d['name']}", i)
+        for i, d in enumerate(sd.query_devices())
+        if d[f"max_{kind}_channels"] > 0
+    ]
+
+
 def resolve_device(device: int | str | None, kind: str):
     """Resolve a user-supplied device argument (index, name substring, or None).
 

@@ -17,6 +17,14 @@ def passthrough(indata: np.ndarray) -> np.ndarray:
     return indata
 
 
+def _peak_dbfs(block: np.ndarray) -> float:
+    """Peak level of a float32 buffer in dBFS (0 dBFS = full scale)."""
+    peak = float(np.max(np.abs(block))) if block.size else 0.0
+    if peak <= 0.0:
+        return -100.0
+    return max(20.0 * np.log10(peak), -100.0)
+
+
 class AudioEngine:
     def __init__(
         self,
@@ -38,6 +46,20 @@ class AudioEngine:
         self._callback_durations: list[float] = []
         self._xruns = 0
 
+        # Read from any thread for live level meters; each callback overwrites
+        # these with a single float, which is an atomic operation under the GIL.
+        self.input_level_db = -100.0
+        self.output_level_db = -100.0
+
+    @property
+    def is_running(self) -> bool:
+        return self._stream is not None and self._stream.active
+
+    @property
+    def latency(self) -> tuple[float, float]:
+        """(input_latency, output_latency) in seconds, valid once started."""
+        return self._stream.latency
+
     def _callback(self, indata, outdata, frames, time_info, status):
         start = time.perf_counter()
 
@@ -47,6 +69,9 @@ class AudioEngine:
             print(f"[audio] stream status: {status}", flush=True)
 
         outdata[:] = self.processor(indata)
+
+        self.input_level_db = _peak_dbfs(indata)
+        self.output_level_db = _peak_dbfs(outdata)
 
         self._callback_durations.append(time.perf_counter() - start)
 
