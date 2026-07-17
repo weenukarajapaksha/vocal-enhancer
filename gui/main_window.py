@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -18,7 +19,14 @@ from PySide6.QtWidgets import (
 from audio.devices import best_default_devices, device_choices
 from audio.engine import AudioEngine
 from dsp import default_chain
-from gui.effects_panel import build_compressor_panel, build_eq_panel, build_gate_panel
+from gui.effects_panel import (
+    build_compressor_panel,
+    build_delay_panel,
+    build_eq_panel,
+    build_gate_panel,
+    build_reverb_panel,
+    build_robot_panel,
+)
 from gui.level_meter import METER_FLOOR_DB, LevelMeter
 
 METER_POLL_MS = 50
@@ -63,6 +71,9 @@ class MainWindow(QMainWindow):
         effects.addWidget(build_gate_panel(self.chain.get("gate")))
         effects.addWidget(build_compressor_panel(self.chain.get("compressor")))
         effects.addWidget(build_eq_panel(self.chain.get("eq")))
+        effects.addWidget(build_robot_panel(self.chain.get("robot")))
+        effects.addWidget(build_delay_panel(self.chain.get("delay")))
+        effects.addWidget(build_reverb_panel(self.chain.get("reverb")))
 
         layout = QVBoxLayout()
         layout.addLayout(form)
@@ -73,7 +84,12 @@ class MainWindow(QMainWindow):
 
         container = QWidget()
         container.setLayout(layout)
-        self.setCentralWidget(container)
+
+        scroll = QScrollArea()
+        scroll.setWidget(container)
+        scroll.setWidgetResizable(True)
+        self.setCentralWidget(scroll)
+        self.resize(420, 700)
 
         self.meter_timer = QTimer(self)
         self.meter_timer.setInterval(METER_POLL_MS)

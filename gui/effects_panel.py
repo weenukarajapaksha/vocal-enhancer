@@ -59,3 +59,43 @@ def build_eq_panel(eq):
         lambda on: setattr(eq, "enabled", on),
         [low_gain, mid_freq, mid_gain, high_gain],
     )
+
+
+def build_robot_panel(robot):
+    carrier = ParamSlider("Carrier Freq", 20, 300, robot.carrier_freq, step=5, suffix=" Hz")
+    carrier.valueChanged.connect(lambda v: setattr(robot, "carrier_freq", v))
+
+    mix = ParamSlider("Mix", 0, 1, robot.mix, step=0.05, suffix="")
+    mix.valueChanged.connect(lambda v: setattr(robot, "mix", v))
+
+    return _group("Robot Voice", robot.enabled, lambda on: setattr(robot, "enabled", on), [carrier, mix])
+
+
+def build_delay_panel(delay):
+    delay_time = ParamSlider("Delay Time", 10, 1000, delay.delay_ms, step=10, suffix=" ms")
+    delay_time.valueChanged.connect(lambda v: setattr(delay, "delay_ms", v))
+
+    feedback = ParamSlider("Feedback", 0, 0.9, delay.feedback, step=0.05, suffix="")
+    feedback.valueChanged.connect(lambda v: setattr(delay, "feedback", v))
+
+    mix = ParamSlider("Mix", 0, 1, delay.mix, step=0.05, suffix="")
+    mix.valueChanged.connect(lambda v: setattr(delay, "mix", v))
+
+    return _group(
+        "Delay / Echo", delay.enabled, lambda on: setattr(delay, "enabled", on), [delay_time, feedback, mix]
+    )
+
+
+def build_reverb_panel(reverb):
+    room_size = ParamSlider("Room Size", 0.5, 0.98, reverb.room_size, step=0.02, suffix="")
+    room_size.valueChanged.connect(lambda v: setattr(reverb, "room_size", v))
+
+    damping = ParamSlider("Damping", 0, 1, reverb.damping, step=0.05, suffix="")
+    damping.valueChanged.connect(lambda v: setattr(reverb, "damping", v))
+
+    mix = ParamSlider("Mix", 0, 1, reverb.mix, step=0.05, suffix="")
+    mix.valueChanged.connect(lambda v: setattr(reverb, "mix", v))
+
+    return _group(
+        "Reverb", reverb.enabled, lambda on: setattr(reverb, "enabled", on), [room_size, damping, mix]
+    )
