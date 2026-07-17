@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from audio.devices import default_devices, device_choices
+from audio.devices import best_default_devices, device_choices
 from audio.engine import AudioEngine
 from dsp import default_chain
 from gui.effects_panel import build_compressor_panel, build_eq_panel, build_gate_panel
@@ -81,7 +81,7 @@ class MainWindow(QMainWindow):
         self.meter_timer.start()
 
     def _populate_devices(self):
-        default_in, default_out = default_devices()
+        default_in, default_out = best_default_devices()
 
         for label, index in device_choices("input"):
             self.input_combo.addItem(label, index)

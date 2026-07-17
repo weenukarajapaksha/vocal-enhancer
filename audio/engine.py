@@ -34,6 +34,7 @@ class AudioEngine:
         input_device=None,
         output_device=None,
         processor=passthrough,
+        latency_hint="low",
     ):
         self.samplerate = samplerate
         self.blocksize = blocksize
@@ -41,6 +42,7 @@ class AudioEngine:
         self.input_device = input_device
         self.output_device = output_device
         self.processor = processor
+        self.latency_hint = latency_hint
 
         self._stream: sd.Stream | None = None
         self._callback_durations: list[float] = []
@@ -75,15 +77,24 @@ class AudioEngine:
 
         self._callback_durations.append(time.perf_counter() - start)
 
-    def start(self):
-        self._stream = sd.Stream(
+    def _open_stream(self, latency):
+        return sd.Stream(
             samplerate=self.samplerate,
             blocksize=self.blocksize,
             channels=self.channels,
             dtype="float32",
             device=(self.input_device, self.output_device),
+            latency=latency,
             callback=self._callback,
         )
+
+    def start(self):
+        try:
+            self._stream = self._open_stream(self.latency_hint)
+        except sd.PortAudioError:
+            # Some host API / device combinations reject a low-latency request outright;
+            # fall back to the driver's default buffering rather than failing to start.
+            self._stream = self._open_stream(None)
         self._stream.start()
 
         in_latency, out_latency = self._stream.latency

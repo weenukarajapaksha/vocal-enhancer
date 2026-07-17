@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from audio.devices import list_devices, resolve_device
+from audio.devices import best_default_devices, list_devices, resolve_device
 from audio.engine import AudioEngine, passthrough
 from dsp import default_chain
 
@@ -33,6 +33,13 @@ def main():
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)
         sys.exit(1)
+
+    if input_device is None or output_device is None:
+        # Prefer a lower-latency host API (WASAPI) over the OS default, which is
+        # often MME and can add 150+ ms of extra buffering.
+        best_input, best_output = best_default_devices()
+        input_device = input_device if input_device is not None else best_input
+        output_device = output_device if output_device is not None else best_output
 
     processor = passthrough if args.no_effects else default_chain(samplerate=args.samplerate)
 

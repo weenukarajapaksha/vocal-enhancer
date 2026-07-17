@@ -13,6 +13,38 @@ def default_devices() -> tuple[int, int]:
     return sd.default.device
 
 
+_PREFERRED_HOST_APIS = ("Windows WASAPI", "Windows DirectSound")
+
+
+def best_default_devices() -> tuple[int, int]:
+    """Like `default_devices()`, but prefers a lower-latency host API (WASAPI, then
+    DirectSound) for the same physical device -- the OS default is often the legacy
+    MME API, which can add 150+ ms of extra buffering.
+    """
+    devices = sd.query_devices()
+    hostapis = sd.query_hostapis()
+
+    def find_best(default_index, kind):
+        if default_index is None or default_index < 0:
+            return default_index
+        default_name = devices[default_index]["name"].strip()
+
+        for preferred_api in _PREFERRED_HOST_APIS:
+            for i, d in enumerate(devices):
+                if d[f"max_{kind}_channels"] <= 0:
+                    continue
+                if hostapis[d["hostapi"]]["name"] != preferred_api:
+                    continue
+                name = d["name"].strip()
+                # MME device names are truncated to 31 chars, so match by prefix.
+                if name.startswith(default_name) or default_name.startswith(name):
+                    return i
+        return default_index
+
+    default_in, default_out = sd.default.device
+    return find_best(default_in, "input"), find_best(default_out, "output")
+
+
 def device_choices(kind: str) -> list[tuple[str, int]]:
     """Return [(display_name, index), ...] for devices usable as `kind` ('input' or 'output')."""
     return [
