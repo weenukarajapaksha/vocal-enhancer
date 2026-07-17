@@ -1,8 +1,5 @@
-"""Milestone 3: GUI shell -- device selection, start/stop, live level meters.
-
-No effect controls yet; those get added once the Milestone 2 DSP chain exists,
-at which point they get their own panel here and get passed to AudioEngine's
-`processor` argument.
+"""Milestone 3: GUI dashboard -- device selection, start/stop, live level
+meters, and effect controls for the Milestone 2 DSP chain.
 """
 
 from PySide6.QtCore import QTimer
@@ -20,9 +17,12 @@ from PySide6.QtWidgets import (
 
 from audio.devices import default_devices, device_choices
 from audio.engine import AudioEngine
+from dsp import default_chain
+from gui.effects_panel import build_compressor_panel, build_eq_panel, build_gate_panel
 from gui.level_meter import METER_FLOOR_DB, LevelMeter
 
 METER_POLL_MS = 50
+SAMPLERATE = 48000
 
 
 class MainWindow(QMainWindow):
@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Vocal Enhancer")
         self.engine: AudioEngine | None = None
+        self.chain = default_chain(samplerate=SAMPLERATE)
 
         self.input_combo = QComboBox()
         self.output_combo = QComboBox()
@@ -58,11 +59,17 @@ class MainWindow(QMainWindow):
         output_row.addWidget(self.output_meter)
         meters.addLayout(output_row)
 
+        effects = QVBoxLayout()
+        effects.addWidget(build_gate_panel(self.chain.get("gate")))
+        effects.addWidget(build_compressor_panel(self.chain.get("compressor")))
+        effects.addWidget(build_eq_panel(self.chain.get("eq")))
+
         layout = QVBoxLayout()
         layout.addLayout(form)
         layout.addWidget(self.start_button)
         layout.addWidget(self.status_label)
         layout.addLayout(meters)
+        layout.addLayout(effects)
 
         container = QWidget()
         container.setLayout(layout)
@@ -100,7 +107,12 @@ class MainWindow(QMainWindow):
         input_device = self.input_combo.currentData()
         output_device = self.output_combo.currentData()
 
-        self.engine = AudioEngine(input_device=input_device, output_device=output_device)
+        self.engine = AudioEngine(
+            samplerate=SAMPLERATE,
+            input_device=input_device,
+            output_device=output_device,
+            processor=self.chain,
+        )
         try:
             self.engine.start()
         except Exception as e:
