@@ -6,6 +6,7 @@ of the default identity function -- no other changes to this file should be
 needed.
 """
 
+import gc
 import time
 
 import numpy as np
@@ -29,7 +30,7 @@ class AudioEngine:
     def __init__(
         self,
         samplerate: int = 48000,
-        blocksize: int = 256,
+        blocksize: int = 384,
         channels: int = 1,
         input_device=None,
         output_device=None,
@@ -47,6 +48,7 @@ class AudioEngine:
         self._stream: sd.Stream | None = None
         self._callback_durations: list[float] = []
         self._xruns = 0
+        self._gc_was_enabled = True
 
         # Read from any thread for live level meters; each callback overwrites
         # these with a single float, which is an atomic operation under the GIL.
@@ -95,6 +97,14 @@ class AudioEngine:
             # Some host API / device combinations reject a low-latency request outright;
             # fall back to the driver's default buffering rather than failing to start.
             self._stream = self._open_stream(None)
+
+        # The DSP chain allocates many short-lived per-sample lists; without this,
+        # Python's cyclic GC occasionally runs a full collection mid-callback,
+        # observed to stall a callback for 40-65ms against a ~5ms budget. None of
+        # our effects create reference cycles, so refcounting alone is sufficient.
+        self._gc_was_enabled = gc.isenabled()
+        gc.disable()
+
         self._stream.start()
 
         in_latency, out_latency = self._stream.latency
@@ -113,6 +123,9 @@ class AudioEngine:
             return
         self._stream.stop()
         self._stream.close()
+
+        if self._gc_was_enabled:
+            gc.enable()
 
         if self._callback_durations:
             budget_ms = self.blocksize / self.samplerate * 1000

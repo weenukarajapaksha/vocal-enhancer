@@ -24,6 +24,7 @@ from gui.effects_panel import (
     build_delay_panel,
     build_eq_panel,
     build_gate_panel,
+    build_pitch_panel,
     build_reverb_panel,
     build_robot_panel,
 )
@@ -69,6 +70,7 @@ class MainWindow(QMainWindow):
 
         effects = QVBoxLayout()
         effects.addWidget(build_gate_panel(self.chain.get("gate")))
+        effects.addWidget(build_pitch_panel(self.chain.get("pitch")))
         effects.addWidget(build_compressor_panel(self.chain.get("compressor")))
         effects.addWidget(build_eq_panel(self.chain.get("eq")))
         effects.addWidget(build_robot_panel(self.chain.get("robot")))

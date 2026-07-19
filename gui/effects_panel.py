@@ -1,7 +1,8 @@
 """GUI panels exposing the Milestone 2 DSP chain's parameters and on/off toggles."""
 
-from PySide6.QtWidgets import QGroupBox, QVBoxLayout
+from PySide6.QtWidgets import QComboBox, QGroupBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from dsp.pitch import NOTE_NAMES, SCALES
 from gui.param_slider import ParamSlider
 
 
@@ -58,6 +59,40 @@ def build_eq_panel(eq):
         eq.enabled,
         lambda on: setattr(eq, "enabled", on),
         [low_gain, mid_freq, mid_gain, high_gain],
+    )
+
+
+def build_pitch_panel(pitch):
+    key_combo = QComboBox()
+    key_combo.addItems(NOTE_NAMES)
+    key_combo.setCurrentText(pitch.key)
+    key_combo.currentTextChanged.connect(lambda v: setattr(pitch, "key", v))
+
+    scale_combo = QComboBox()
+    scale_combo.addItems(list(SCALES.keys()))
+    scale_combo.setCurrentText(pitch.scale)
+    scale_combo.currentTextChanged.connect(lambda v: setattr(pitch, "scale", v))
+
+    key_row_layout = QHBoxLayout()
+    key_row_layout.setContentsMargins(0, 0, 0, 0)
+    key_row_layout.addWidget(QLabel("Key"))
+    key_row_layout.addWidget(key_combo)
+    key_row_layout.addWidget(QLabel("Scale"))
+    key_row_layout.addWidget(scale_combo)
+    key_row = QWidget()
+    key_row.setLayout(key_row_layout)
+
+    strength = ParamSlider("Strength", 0, 1, pitch.strength, step=0.05, suffix="")
+    strength.valueChanged.connect(lambda v: setattr(pitch, "strength", v))
+
+    speed = ParamSlider("Retune Speed", 5, 200, pitch.speed_ms, step=5, suffix=" ms")
+    speed.valueChanged.connect(lambda v: setattr(pitch, "speed_ms", v))
+
+    return _group(
+        "Pitch Correction",
+        pitch.enabled,
+        lambda on: setattr(pitch, "enabled", on),
+        [key_row, strength, speed],
     )
 
 

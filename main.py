@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument("--input-device", default=None, help="input device index or name substring")
     parser.add_argument("--output-device", default=None, help="output device index or name substring")
     parser.add_argument("--samplerate", type=int, default=48000)
-    parser.add_argument("--blocksize", type=int, default=256)
+    parser.add_argument("--blocksize", type=int, default=384)
     parser.add_argument("--channels", type=int, default=1)
     parser.add_argument("--no-effects", action="store_true", help="bypass the DSP chain (raw passthrough)")
     return parser.parse_args()
