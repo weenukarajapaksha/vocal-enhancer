@@ -96,6 +96,30 @@ def build_pitch_panel(pitch):
     )
 
 
+def build_harmony_panel(harmony):
+    voice1_interval = ParamSlider("Voice 1 Interval", -12, 12, harmony.voice1_semitones, step=1, suffix=" st")
+    voice1_interval.valueChanged.connect(lambda v: setattr(harmony, "voice1_semitones", v))
+
+    voice1_mix = ParamSlider("Voice 1 Mix", 0, 1, harmony.voice1_mix, step=0.05, suffix="")
+    voice1_mix.valueChanged.connect(lambda v: setattr(harmony, "voice1_mix", v))
+
+    voice2_interval = ParamSlider("Voice 2 Interval", -12, 12, harmony.voice2_semitones, step=1, suffix=" st")
+    voice2_interval.valueChanged.connect(lambda v: setattr(harmony, "voice2_semitones", v))
+
+    voice2_mix = ParamSlider("Voice 2 Mix", 0, 1, harmony.voice2_mix, step=0.05, suffix="")
+    voice2_mix.valueChanged.connect(lambda v: setattr(harmony, "voice2_mix", v))
+
+    dry_mix = ParamSlider("Dry Mix", 0, 1, harmony.dry_mix, step=0.05, suffix="")
+    dry_mix.valueChanged.connect(lambda v: setattr(harmony, "dry_mix", v))
+
+    return _group(
+        "Harmony",
+        harmony.enabled,
+        lambda on: setattr(harmony, "enabled", on),
+        [voice1_interval, voice1_mix, voice2_interval, voice2_mix, dry_mix],
+    )
+
+
 def build_robot_panel(robot):
     carrier = ParamSlider("Carrier Freq", 20, 300, robot.carrier_freq, step=5, suffix=" Hz")
     carrier.valueChanged.connect(lambda v: setattr(robot, "carrier_freq", v))

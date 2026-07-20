@@ -13,6 +13,7 @@ _VALID_NAME_RE = re.compile(r"^[A-Za-z0-9 _-]{1,60}$")
 PARAM_SPECS = {
     "gate": ["enabled", "threshold_db", "attack_ms", "release_ms"],
     "pitch": ["enabled", "strength", "speed_ms", "key", "scale"],
+    "harmony": ["enabled", "voice1_semitones", "voice1_mix", "voice2_semitones", "voice2_mix", "dry_mix"],
     "compressor": ["enabled", "threshold_db", "ratio", "attack_ms", "release_ms", "makeup_db"],
     "eq": ["enabled", "low_freq", "low_gain_db", "mid_freq", "mid_gain_db", "mid_q", "high_freq", "high_gain_db"],
     "robot": ["enabled", "carrier_freq", "mix"],

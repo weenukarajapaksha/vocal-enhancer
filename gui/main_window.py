@@ -28,6 +28,7 @@ from gui.effects_panel import (
     build_delay_panel,
     build_eq_panel,
     build_gate_panel,
+    build_harmony_panel,
     build_pitch_panel,
     build_reverb_panel,
     build_robot_panel,
@@ -160,6 +161,7 @@ class MainWindow(QMainWindow):
         vocal_chain_layout = QVBoxLayout(vocal_chain_tab)
         vocal_chain_layout.addWidget(build_gate_panel(self.chain.get("gate")))
         vocal_chain_layout.addWidget(build_pitch_panel(self.chain.get("pitch")))
+        vocal_chain_layout.addWidget(build_harmony_panel(self.chain.get("harmony")))
         vocal_chain_layout.addWidget(build_compressor_panel(self.chain.get("compressor")))
         vocal_chain_layout.addWidget(build_eq_panel(self.chain.get("eq")))
         vocal_chain_layout.addStretch(1)
