@@ -24,6 +24,6 @@ class LevelMeter(QProgressBar):
         else:
             color = "#55b06a"
         self.setStyleSheet(
-            f"QProgressBar {{ border: 1px solid #888; border-radius: 3px; background: #222; }}"
-            f"QProgressBar::chunk {{ background-color: {color}; }}"
+            "QProgressBar { border: 1px solid #3a3c4a; border-radius: 4px; background: #2d2f3a; }"
+            f"QProgressBar::chunk {{ background-color: {color}; border-radius: 3px; }}"
         )
