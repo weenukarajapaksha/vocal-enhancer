@@ -33,6 +33,7 @@ from gui.effects_panel import (
     build_reverb_panel,
     build_robot_panel,
 )
+from gui.file_tab import FileProcessingTab
 from gui.level_meter import METER_FLOOR_DB, LevelMeter
 
 METER_POLL_MS = 50
@@ -60,6 +61,21 @@ class MainWindow(QMainWindow):
         self.engine: AudioEngine | None = None
         self.chain = default_chain(samplerate=SAMPLERATE)
 
+        realtime_tab = self._build_realtime_tab()
+        self.file_tab = FileProcessingTab(self.chain)
+
+        outer_tabs = QTabWidget()
+        outer_tabs.addTab(realtime_tab, "Real-Time")
+        outer_tabs.addTab(self.file_tab, "Load && Process")
+        self.setCentralWidget(outer_tabs)
+        self.resize(460, 760)
+
+        self.meter_timer = QTimer(self)
+        self.meter_timer.setInterval(METER_POLL_MS)
+        self.meter_timer.timeout.connect(self._update_meters)
+        self.meter_timer.start()
+
+    def _build_realtime_tab(self) -> QWidget:
         header = QLabel("Vocal Enhancer")
         header.setObjectName("HeaderTitle")
         subheader = QLabel("Real-time voice processing")
@@ -148,13 +164,7 @@ class MainWindow(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidget(container)
         scroll.setWidgetResizable(True)
-        self.setCentralWidget(scroll)
-        self.resize(440, 720)
-
-        self.meter_timer = QTimer(self)
-        self.meter_timer.setInterval(METER_POLL_MS)
-        self.meter_timer.timeout.connect(self._update_meters)
-        self.meter_timer.start()
+        return scroll
 
     def _build_effect_tabs(self) -> QTabWidget:
         vocal_chain_tab = QWidget()
@@ -295,4 +305,5 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         if self.engine is not None and self.engine.is_running:
             self.engine.stop()
+        self.file_tab.shutdown()
         event.accept()
